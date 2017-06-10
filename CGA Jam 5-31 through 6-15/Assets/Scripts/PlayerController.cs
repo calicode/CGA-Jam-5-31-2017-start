@@ -18,6 +18,8 @@ public class PlayerController : MonoBehaviour
 
     private Camera mainCam;
 
+    public GameManager gameManager;
+
     // Use this for initialization
     void Awake()
     {
@@ -61,7 +63,7 @@ public class PlayerController : MonoBehaviour
         Debug.Log("player collided");
         if (collider.gameObject.tag.Contains("Gravity")) { Debug.Log("reversing direction"); ReverseDirection(); currentSpeedMultiplier *= .5f; }
 
-        if (collider.gameObject.tag.Contains("Pickup")) { score++; Destroy(collider.gameObject); }
+        if (collider.gameObject.tag.Contains("Pickup")) { gameManager.IncreaseScoreAndUpdateView(); Destroy(collider.gameObject); }
 
 
     }
