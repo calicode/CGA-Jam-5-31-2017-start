@@ -24,6 +24,9 @@ public class ScoreManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        currentTimeDisplay.text = Time.timeSinceLevelLoad.ToString("F2");
+        float deltaBetweenTimes = (bestTime - Time.timeSinceLevelLoad);
+
+
+        currentTimeDisplay.text = "Current Time: " + Time.timeSinceLevelLoad.ToString("F2") + "   (" + deltaBetweenTimes.ToString("F2") + ")";
     }
 }
