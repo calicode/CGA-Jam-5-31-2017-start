@@ -10,14 +10,11 @@ public class PlayerController : MonoBehaviour
     public float speedPickupIncrease = 2f;
 
 
-
+    public bool debugCheat = false;
 
     private float baseSpeed = 1;
     private bool playerImmune = false;
 
-
-    enum moveDirections { Down, Up };
-    moveDirections currentDirection;
 
     private Camera mainCam;
     private ScoreManager scoreManager;
@@ -29,10 +26,13 @@ DONE player starts at max speed but loses speed every second,
 DONE    pickups bring speed back up,
 DONE    obstacles lower speed further. 
 DONE IMMUNITY TIMER 
-     how does level end, goal line? visual effect to communicate idea of blasting off to next planet, scale player sprite up and background/other stuff down
+     DONE how does level end, goal line? 
+     visual effect to communicate idea of blasting off to next planet, scale player sprite up and background/other stuff down
     DONE how does the player die? run out of time to exit so that will need a countdown timer. 
      paralax backround scrolling 
-     
+
+full level, 1 minute timer. 
+try removing max speed limiter and instead halving speed on obstacle hit
      
     autofiring maybe rate of fire based on player speed sure
      
@@ -56,8 +56,7 @@ DONE IMMUNITY TIMER
     void Start()
     {
         scoreManager = GameObject.FindObjectOfType<ScoreManager>();
-        currentDirection = moveDirections.Up;
-        InvokeRepeating("DecreaseSpeed", 1, 1);
+        if (!debugCheat) { InvokeRepeating("DecreaseSpeed", 1, 1); }
         mainCam = GameObject.FindObjectOfType<Camera>();
 
     }
@@ -77,14 +76,25 @@ DONE IMMUNITY TIMER
 
     }
 
+    void SpeedIncrease(float amount)
+    {
+        if (currentSpeedMultiplier < maxSpeedMultipler)
+        {
+            currentSpeedMultiplier += amount;
+        }
+
+
+    }
+
     IEnumerator ImmunityTimer()
     {
+        Debug.Log("Start immunity timer");
         playerImmune = true;
         // flash player sprite
         yield return new WaitForSeconds(2);
         playerImmune = false;
         // i think this can all be done on a co-routine something like set plkayer to immune, flash sprite, yield for a few seconds, and then remove immune flag
-
+        Debug.Log("End Immunity timer");
 
     }
 
@@ -94,16 +104,12 @@ DONE IMMUNITY TIMER
 
         //        if (collider.gameObject.tag.Contains("Gravity")) { Debug.Log("reversing direction"); ReverseDirection(); currentSpeedMultiplier *= .5f; }
 
-        if (collider.gameObject.tag.Contains("SpeedPickup")) { currentSpeedMultiplier += speedPickupIncrease; Destroy(collider.gameObject); }
-        if (collider.gameObject.tag.Contains("Obstacle") && !playerImmune) { currentSpeedMultiplier -= speedPickupIncrease; StartCoroutine(ImmunityTimer()); }
+        if (collider.gameObject.tag.Contains("SpeedPickup")) { SpeedIncrease(speedPickupIncrease); Destroy(collider.gameObject); }
         if (collider.gameObject.tag.Contains("GoalLine")) { scoreManager.NextLevel(); }
+        if (collider.gameObject.tag.Contains("Obstacle") && !playerImmune) { Debug.Log("hit thing reducing speed"); currentSpeedMultiplier -= speedPickupIncrease; StartCoroutine(ImmunityTimer()); }
     }
 
-    void ReverseDirection()
-    {
-        if (currentDirection == moveDirections.Down) { currentDirection = moveDirections.Up; } else { currentDirection = moveDirections.Down; }
 
-    }
     void MovePlayer()
     {
 
@@ -111,25 +117,15 @@ DONE IMMUNITY TIMER
         mousePos.z = 0;
         float mouseDiff = mousePos.x - transform.position.x;
         float moveAmount = currentSpeedMultiplier * Time.deltaTime;
+        Debug.Log("2 * mousdiff sign is " + (2 * Mathf.Sign(mouseDiff)).ToString());
 
 
 
 
+        // i can probably remove direction switching as we just go into negative mouve amount
 
-        switch (currentDirection)
-        {
-            case moveDirections.Down:
-                transform.Translate(mouseDiff, moveAmount, 0);
-                if (currentSpeedMultiplier > baseSpeed) { Debug.Log("Reversing directions from down to up"); ReverseDirection(); }
-                break;
-
-            case moveDirections.Up:
-
-                transform.Translate(mouseDiff, moveAmount, 0);
-                if (currentSpeedMultiplier <= baseSpeed) { Debug.Log("Reversing directions from up to down"); ReverseDirection(); }
-                break;
-
-        }
+        transform.Translate(mouseDiff, moveAmount, 0);
+        transform.position = new Vector2(Mathf.Clamp(transform.position.x, -12, 12), transform.position.y);
 
 
 

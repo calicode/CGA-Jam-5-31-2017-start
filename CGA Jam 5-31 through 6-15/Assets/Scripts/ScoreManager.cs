@@ -47,7 +47,7 @@ public class ScoreManager : MonoBehaviour
     {
         float escapeDelta = escapeTime - Time.timeSinceLevelLoad;
 
-        if (escapeDelta > 0) { GameOver(); } else { escapeTimeDisplay.text = "Time Left: " + escapeDelta.ToString("F2"); }
+        if (escapeDelta < 0) { GameOver(); } else { escapeTimeDisplay.text = "Time Left: " + escapeDelta.ToString("F2"); }
 
 
     }
@@ -56,7 +56,7 @@ public class ScoreManager : MonoBehaviour
     void GameOver()
     {
         Debug.Log("Gameover called");
-        SceneManager.LoadSceneAsync("Level_01");
+        SceneManager.LoadSceneAsync("01_maingame");
 
     }
 

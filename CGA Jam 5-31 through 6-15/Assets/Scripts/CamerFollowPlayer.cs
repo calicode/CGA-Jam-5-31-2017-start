@@ -6,7 +6,7 @@ public class CamerFollowPlayer : MonoBehaviour
 {
     public GameObject playerObject;
     private Vector3 offset;
-    private float cameraOffset = 5f;
+    private float cameraOffset = 1f;
     // Use this for initialization
     void Start()
     {
@@ -17,6 +17,7 @@ public class CamerFollowPlayer : MonoBehaviour
     void LateUpdate()
     {
         float newY = (playerObject.transform.position.y + offset.y) - cameraOffset;
+        //float newX = (playerObject.transform.position.x + offset.x) - cameraOffset;
         transform.position = new Vector3(transform.position.x, newY, transform.position.z);
     }
 }
