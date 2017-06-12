@@ -13,20 +13,34 @@ public class PlayerController : MonoBehaviour
 
 
     private float baseSpeed = 1;
-    private int maxLives = 5;
-    private int currentLives;
-    private int score = 0;
-
+    private bool playerImmune = false;
 
 
     enum moveDirections { Down, Up };
     moveDirections currentDirection;
 
     private Camera mainCam;
+    private ScoreManager scoreManager;
 
 
 
-    // player starts at max speed but loses speed every second, pickups bring speed back up, obstacles lower speed further. beat time, autofiring maybe rate of fire based on player speed sure
+    /* 
+DONE player starts at max speed but loses speed every second, 
+DONE    pickups bring speed back up,
+DONE    obstacles lower speed further. 
+DONE IMMUNITY TIMER 
+     how does level end, goal line? visual effect to communicate idea of blasting off to next planet, scale player sprite up and background/other stuff down
+    DONE how does the player die? run out of time to exit so that will need a countdown timer. 
+     paralax backround scrolling 
+     
+     
+    autofiring maybe rate of fire based on player speed sure
+     
+     
+     post jam - have npcs etc in background fighting, it can be animation to start with but a challenge would be implementing rudimentary ai so its different each Time
+
+
+    */
 
 
 
@@ -37,24 +51,18 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         currentSpeedMultiplier = maxSpeedMultipler / 2;
-        currentLives = maxLives;
     }
 
     void Start()
     {
-
+        scoreManager = GameObject.FindObjectOfType<ScoreManager>();
         currentDirection = moveDirections.Up;
         InvokeRepeating("DecreaseSpeed", 1, 1);
         mainCam = GameObject.FindObjectOfType<Camera>();
 
     }
 
-    void ResetAfterDeath()
-    {
 
-        currentLives--;
-        currentSpeedMultiplier = maxSpeedMultipler;
-    }
     // Update is called once per frame
 
     void Update()
@@ -69,6 +77,16 @@ public class PlayerController : MonoBehaviour
 
     }
 
+    IEnumerator ImmunityTimer()
+    {
+        playerImmune = true;
+        // flash player sprite
+        yield return new WaitForSeconds(2);
+        playerImmune = false;
+        // i think this can all be done on a co-routine something like set plkayer to immune, flash sprite, yield for a few seconds, and then remove immune flag
+
+
+    }
 
     void OnTriggerEnter2D(Collider2D collider)
     {
@@ -77,8 +95,8 @@ public class PlayerController : MonoBehaviour
         //        if (collider.gameObject.tag.Contains("Gravity")) { Debug.Log("reversing direction"); ReverseDirection(); currentSpeedMultiplier *= .5f; }
 
         if (collider.gameObject.tag.Contains("SpeedPickup")) { currentSpeedMultiplier += speedPickupIncrease; Destroy(collider.gameObject); }
-
-
+        if (collider.gameObject.tag.Contains("Obstacle") && !playerImmune) { currentSpeedMultiplier -= speedPickupIncrease; StartCoroutine(ImmunityTimer()); }
+        if (collider.gameObject.tag.Contains("GoalLine")) { scoreManager.NextLevel(); }
     }
 
     void ReverseDirection()
@@ -93,9 +111,6 @@ public class PlayerController : MonoBehaviour
         mousePos.z = 0;
         float mouseDiff = mousePos.x - transform.position.x;
         float moveAmount = currentSpeedMultiplier * Time.deltaTime;
-        //float moveAmount = (Time.deltaTime * currentSpeedMultiplier);
-        //Debug.Log("Player v3 is" + transform.position.ToString());
-        //Debug.Log("Moveamoutn is " + moveAmount);
 
 
 
