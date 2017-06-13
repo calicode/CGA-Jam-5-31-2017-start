@@ -4,6 +4,30 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+
+
+    /* 
+DONE player starts at max speed but loses speed every second, 
+DONE    pickups bring speed back up,
+DONE    obstacles lower speed further. 
+DONE IMMUNITY TIMER 
+     DONE how does level end, goal line? 
+     visual effect to communicate idea of blasting off to next planet, scale player sprite up and background/other stuff down
+    DONE how does the player die? run out of time to exit so that will need a countdown timer. 
+     paralax backround scrolling 
+
+     blow up obstacles if speed is high enough, score for blowing up more stuff, bigger obstacles have more hp 
+
+full level, 1 minute timer. 
+try removing max speed limiter and instead halving speed on obstacle hit
+     
+    autofiring maybe rate of fire based on player speed sure
+     
+     
+     post jam - have npcs etc in background fighting, it can be animation to start with but a challenge would be implementing rudimentary ai so its different each Time
+
+
+    */
     public float currentSpeedMultiplier;
     public float maxSpeedMultipler = 15f;
     public float decelerationIncrement = .5f;
@@ -21,27 +45,6 @@ public class PlayerController : MonoBehaviour
 
 
 
-    /* 
-DONE player starts at max speed but loses speed every second, 
-DONE    pickups bring speed back up,
-DONE    obstacles lower speed further. 
-DONE IMMUNITY TIMER 
-     DONE how does level end, goal line? 
-     visual effect to communicate idea of blasting off to next planet, scale player sprite up and background/other stuff down
-    DONE how does the player die? run out of time to exit so that will need a countdown timer. 
-     paralax backround scrolling 
-
-full level, 1 minute timer. 
-try removing max speed limiter and instead halving speed on obstacle hit
-     
-    autofiring maybe rate of fire based on player speed sure
-     
-     
-     post jam - have npcs etc in background fighting, it can be animation to start with but a challenge would be implementing rudimentary ai so its different each Time
-
-
-    */
-
 
 
 
@@ -55,7 +58,7 @@ try removing max speed limiter and instead halving speed on obstacle hit
 
     void Start()
     {
-        scoreManager = GameObject.FindObjectOfType<ScoreManager>();
+        scoreManager = GameObject.FindObjectOfType<ScoreManager>().GetComponent<ScoreManager>();
         if (!debugCheat) { InvokeRepeating("DecreaseSpeed", 1, 1); }
         mainCam = GameObject.FindObjectOfType<Camera>();
 
@@ -93,7 +96,6 @@ try removing max speed limiter and instead halving speed on obstacle hit
         // flash player sprite
         yield return new WaitForSeconds(2);
         playerImmune = false;
-        // i think this can all be done on a co-routine something like set plkayer to immune, flash sprite, yield for a few seconds, and then remove immune flag
         Debug.Log("End Immunity timer");
 
     }
@@ -102,11 +104,24 @@ try removing max speed limiter and instead halving speed on obstacle hit
     {
         Debug.Log("player collided");
 
-        //        if (collider.gameObject.tag.Contains("Gravity")) { Debug.Log("reversing direction"); ReverseDirection(); currentSpeedMultiplier *= .5f; }
 
         if (collider.gameObject.tag.Contains("SpeedPickup")) { SpeedIncrease(speedPickupIncrease); Destroy(collider.gameObject); }
         if (collider.gameObject.tag.Contains("GoalLine")) { scoreManager.NextLevel(); }
-        if (collider.gameObject.tag.Contains("Obstacle") && !playerImmune) { Debug.Log("hit thing reducing speed"); currentSpeedMultiplier -= speedPickupIncrease; StartCoroutine(ImmunityTimer()); }
+
+
+        if (collider.gameObject.tag.Contains("Obstacle") && !playerImmune)
+        {
+            ObstacleController obsControl = collider.GetComponent<ObstacleController>();
+            if (obsControl.ShouldIExplode(currentSpeedMultiplier) < 0)
+            {
+                // score stuff
+            }
+            else
+            {
+                currentSpeedMultiplier -= speedPickupIncrease;
+                StartCoroutine(ImmunityTimer());
+            }
+        }
     }
 
 
@@ -117,7 +132,7 @@ try removing max speed limiter and instead halving speed on obstacle hit
         mousePos.z = 0;
         float mouseDiff = mousePos.x - transform.position.x;
         float moveAmount = currentSpeedMultiplier * Time.deltaTime;
-        Debug.Log("2 * mousdiff sign is " + (2 * Mathf.Sign(mouseDiff)).ToString());
+        // Debug.Log("2 * mousdiff sign is " + (2 * Mathf.Sign(mouseDiff)).ToString());
 
 
 
