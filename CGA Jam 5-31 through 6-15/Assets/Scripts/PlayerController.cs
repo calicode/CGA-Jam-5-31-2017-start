@@ -29,10 +29,10 @@ try removing max speed limiter and instead halving speed on obstacle hit
 
     */
     public float currentSpeedMultiplier;
-    public float maxSpeedMultipler = 15f;
-    public float decelerationIncrement = .5f;
-    public float speedPickupIncrease = 2f;
-
+    public float maxSpeedMultipler = 25f;
+    float decelerationIncrement = .5f;
+    float speedPickupIncrease = 1f;
+    int immunityTime = 3;
 
     public bool debugCheat = false;
 
@@ -40,8 +40,8 @@ try removing max speed limiter and instead halving speed on obstacle hit
     private bool playerImmune = false;
 
 
+    private Animator animator;
     private Camera mainCam;
-    private ScoreManager scoreManager;
 
 
 
@@ -53,12 +53,12 @@ try removing max speed limiter and instead halving speed on obstacle hit
     // Use this for initialization
     void Awake()
     {
-        currentSpeedMultiplier = maxSpeedMultipler / 2;
+        currentSpeedMultiplier = maxSpeedMultipler / 4;
     }
 
     void Start()
     {
-        scoreManager = GameObject.FindObjectOfType<ScoreManager>().GetComponent<ScoreManager>();
+        animator = GetComponent<Animator>();
         if (!debugCheat) { InvokeRepeating("DecreaseSpeed", 1, 1); }
         mainCam = GameObject.FindObjectOfType<Camera>();
 
@@ -94,7 +94,8 @@ try removing max speed limiter and instead halving speed on obstacle hit
         Debug.Log("Start immunity timer");
         playerImmune = true;
         // flash player sprite
-        yield return new WaitForSeconds(2);
+        animator.SetTrigger("playerImmune");
+        yield return new WaitForSeconds(immunityTime);
         playerImmune = false;
         Debug.Log("End Immunity timer");
 
@@ -102,23 +103,26 @@ try removing max speed limiter and instead halving speed on obstacle hit
 
     void OnTriggerEnter2D(Collider2D collider)
     {
-        Debug.Log("player collided");
 
 
         if (collider.gameObject.tag.Contains("SpeedPickup")) { SpeedIncrease(speedPickupIncrease); Destroy(collider.gameObject); }
-        if (collider.gameObject.tag.Contains("GoalLine")) { scoreManager.NextLevel(); }
 
 
         if (collider.gameObject.tag.Contains("Obstacle") && !playerImmune)
         {
+            Debug.Log("Hit obstacle at speed of" + currentSpeedMultiplier.ToString());
             ObstacleController obsControl = collider.GetComponent<ObstacleController>();
-            if (obsControl.ShouldIExplode(currentSpeedMultiplier) < 0)
+            float explodeResult = obsControl.ShouldIExplode(currentSpeedMultiplier);
+            if (explodeResult > 0)
             {
                 // score stuff
+                Debug.Log("thing exploded for score of :" + explodeResult.ToString());
+                currentSpeedMultiplier += speedPickupIncrease;
             }
             else
             {
                 currentSpeedMultiplier -= speedPickupIncrease;
+                transform.position = new Vector2(transform.position.x, (transform.position.y - 1));
                 StartCoroutine(ImmunityTimer());
             }
         }
